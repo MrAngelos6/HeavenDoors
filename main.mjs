@@ -114,15 +114,15 @@ client.on('ready', (client) => {
 
 // When a message is received
 client.on('messageCreate', (message) => {
+  let msg = message.cleanContent;
   // If it's a bot
   if(!message.author.bot) {
     // If commandList is not empty
     if(commandList.length > 0) {
-      message.content = message.content.toLowerCase();
       // For each commands
       commandList.forEach((cmd) => {        
         // If the message contain the command
-        if(message.content.includes(cmd.name.toLowerCase())) {
+        if(msg.toLowerCase().includes(cmd.name.toLowerCase())) {
           // Send a message associated to the command
           const channel = message.channel;
           channel.send(cmd.getRandomResponse());
