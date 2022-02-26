@@ -28,33 +28,6 @@ const db = getFirestore();
 // Firebase Part
 //----------------------------------------------------------------
 
-/**
- * Get all the commands from Firebase
- */
-
-/*async function getCommands() {
-  
-    const querySnapshot = 
-    await getDocs(collection(db, 'commands').withConverter(commandConverter));
-
-    querySnapshot.forEach((doc) => {
-        commandList.push(doc.data());
-    });
-}
-
-getCommands();
-
-// Each 30 seconds, update command list
-setInterval(() => {
-    // We reset the list
-    commandList = [];
-    // We fill the list
-    getCommands();
-}, 30000);
-*/
-
-// TODO : Change the previous function by a function that change the list ONLY if there is a modification on firebase
-
 const q = query(collection(db, 'commands').withConverter(commandConverter));
 
 const commandsModified = onSnapshot(q, (snapshot) => {
@@ -63,17 +36,20 @@ const commandsModified = onSnapshot(q, (snapshot) => {
     switch(change.type) {
       case 'added':
         commandList.push(change.doc.data());
+        console.log('A command has been added: ', change.doc.data())
         break;
       case 'modified':
         commandList.forEach((cmd) => {
           if(cmd.id === change.doc.data().id) {
             cmd.name = change.doc.data().name;
             cmd.responses = change.doc.data().responses;
+            console.log('A command has been modified: ', change.doc.data());
           }
         });
         break;
       case 'removed':
         commandList = commandList.filter((cmd) => cmd.id !== change.doc.data().id);
+        console.log('A command has been deleted: ', change.doc.data());
         break;
     }
       
@@ -109,6 +85,7 @@ const client = new Client({
 // When the bot is ready
 client.on('ready', (client) => {
   console.log(`Logged in as ${client.user.tag}!`);
+  console.log(`Connected on ${client.guilds}`)
   client.user.setActivity('surveiller le Paradis !');
 });
 
@@ -125,6 +102,7 @@ client.on('messageCreate', (message) => {
         if(msg.toLowerCase().includes(cmd.name.toLowerCase())) {
           // Send a message associated to the command
           const channel = message.channel;
+          console.log(`A command has been detected: ${cmd.name} on the channelId: ${channel.id}`)
           channel.send(cmd.getRandomResponse());
         }
       })
