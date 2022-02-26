@@ -1,22 +1,11 @@
 import { Client, Intents } from 'discord.js';
 import { getFirestore, collection, query, onSnapshot } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
-import throng from 'throng';
-import Queue from 'bull';
 import { commandConverter } from './command.mjs';
 
 //----------------------------------------------------------------
 // Server <-> Worker
 //----------------------------------------------------------------
-
-// Connect to a local redis instance locally, and the Heroku-provided URL in production
-let REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
-
-let workers = process.env.WEB_CONCURRENCY || 2;
-
-let maxJobsPerWorker = 50;
-
-let workQueue = new Queue('work', REDIS_URL);
 
 //----------------------------------------------------------------
 // Firebase Config
@@ -104,7 +93,8 @@ const category_channel = 946798746879025164;
 // When the bot is ready
 client.on('ready', (client) => {
   console.log(`Logged in as ${client.user.tag}!`);
-  console.log(`Connected on ${client.guilds}`)
+  console.log(`Connected on Guilds:`);
+  console.log(`${client.guilds}`);
   client.user.setActivity('surveiller le Paradis !');
 });
 
@@ -131,7 +121,4 @@ client.on('messageCreate', (message) => {
 
 // We login to Discord with the TOKEN
 client.login(process.env.DISCORD_KEY);
-
-// Initialize the clustered worker process
-throng({ workers, start });
  

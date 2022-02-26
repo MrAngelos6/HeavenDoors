@@ -3,12 +3,7 @@ import Queue from 'bull';
 
 const port = process.env.PORT || 8080;
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-
 const app = express();
-
-// Create / Connect to a named work queue
-let workQueue = new Queue('work', REDIS_URL);
 
 //----------------------------------------------------------------
 // Twitch Part
@@ -31,7 +26,6 @@ const HMAC_PREFIX = 'sha256=';
 app.use(express.raw({          // Need raw message body for signature verification
     type: 'application/json'
 }))  
-
 
 app.post('/eventsub', (req, res) => {
     let secret = getSecret();
