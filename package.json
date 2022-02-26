@@ -1,26 +1,27 @@
 {
     "name": "HeavenDoors",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "A discord bot to send message depending of the user's messages.",
     "main": "main.mjs",
     "scripts": {
-      "start": "node main.mjs"
+        "start": "node main.mjs"
     },
     "dependencies": {
-      "discord.js": "^13.6.0",
-      "firebase": "^9.6.6"
+        "discord.js": "^13.6.0",
+        "express": "^4.17.3",
+        "firebase": "^9.6.6"
     },
     "engines": {
-      "node": "16.14.x"
+        "node": "16.14.x"
     },
     "repository": {
-      "url": "https://github.com/MrAngelos6/HeavenDoors"
+        "url": "https://github.com/MrAngelos6/HeavenDoors"
     },
     "license": "MIT",
     "keywords": [
-      "node",
-      "discord",
-      "bot"
+        "node",
+        "discord",
+        "bot"
     ],
     "type": "module"
-  }
+}
