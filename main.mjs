@@ -93,8 +93,7 @@ const category_channel = 946798746879025164;
 // When the bot is ready
 client.on('ready', (client) => {
   console.log(`Logged in as ${client.user.tag}!`);
-  console.log(`Connected on Guilds:`);
-  console.log(`${client.guilds}`);
+  console.log(`Connected on Guilds: ${JSON.stringify(client.guilds)}`);
   client.user.setActivity('surveiller le Paradis !');
 });
 
