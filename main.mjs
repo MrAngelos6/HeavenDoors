@@ -123,7 +123,7 @@ client.login(process.env.DISCORD_KEY);
 //----------------------------------------------------------------
 
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 // Notification request headers
 const TWITCH_MESSAGE_ID = 'Twitch-Eventsub-Message-Id'.toLowerCase();
