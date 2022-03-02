@@ -74,9 +74,9 @@ const client = new Client({
   ],
 });
 
-const live_channel = 946797486792667166n;
-const title_channel = 946798597406613504n;
-const category_channel = 946798746879025164n;
+const live_channel = '946797486792667166';
+const title_channel = '946798597406613504';
+const category_channel = '946798746879025164';
 
 // When the bot is ready
 client.on('ready', (client) => {
@@ -113,11 +113,11 @@ client.login(process.env.DISCORD_KEY);
 // Check New/Modified Promotions
 //----------------------------------------------------------------
 
-const steamRole = 919305771492200458;
-const epicRole = 919305883815673936;
-const otherRole = 919305976820162560;
+const steamRole = '919305771492200458';
+const epicRole = '919305883815673936';
+const otherRole = '919305976820162560';
 
-const promotionChannel = client.channels.cache.get(753270574272217109);
+const promotionChannel = client.channels.cache.get('753270574272217109');
 
 const q2 = query(collection(db, 'promotions').withConverter(promotionConverter));
 
@@ -165,7 +165,7 @@ const promotionModified = onSnapshot(q2, (snapshot) => {
         break;
       case 'modified':
         console.log('An edited promotion has been detected: ', data);
-        const promotionMessage = promotionChannel.messages.cache.get(data.message_id);
+        const promotionMessage = promotionChannel.messages.cache.get(data.message_id.toString());
         promotionMessage.edit({ embeds: [createPromotionEmbed(data)]} ).then((msg) => {
           console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
         })
