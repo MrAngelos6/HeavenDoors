@@ -126,7 +126,7 @@ const promotionModified = onSnapshot(q2, (snapshot) => {
     
     const data = change.doc.data();
 
-    const role = 0;
+    let role = 0;
 
     switch(data.ping) {
       case 'steam':
