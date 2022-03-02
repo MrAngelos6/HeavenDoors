@@ -4,7 +4,7 @@ import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'fir
 import firebase from './class/firebase.mjs';
 import { commandConverter } from './class/command.mjs';
 import { promotionConverter } from './class/promotions.mjs';
-import consola from 'consola';
+import { Consola } from 'consola';
 
 //----------------------------------------------------------------
 // Server <-> Worker
