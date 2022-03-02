@@ -4,6 +4,7 @@ import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'fir
 import firebase from './class/firebase.mjs';
 import { commandConverter } from './class/command.mjs';
 import { promotionConverter } from './class/promotions.mjs';
+import consola from 'consola';
 
 //----------------------------------------------------------------
 // Server <-> Worker
@@ -117,7 +118,7 @@ const steamRole = '919305771492200458';
 const epicRole = '919305883815673936';
 const otherRole = '919305976820162560';
 
-const promotionChannel = client.channels.cache.get('753270574272217109');
+const promotionChannel = getChannelFromId('753270574272217109');
 
 const q2 = query(collection(db, 'promotions').withConverter(promotionConverter));
 
@@ -139,6 +140,8 @@ const promotionModified = onSnapshot(q2, (snapshot) => {
         role = otherRole;
         break;
     }
+
+
 
     switch(change.type) {
       case 'added':
@@ -166,7 +169,7 @@ const promotionModified = onSnapshot(q2, (snapshot) => {
       case 'modified':
         console.log('An edited promotion has been detected: ', data);
         const promotionMessage = promotionChannel.messages.cache.get(data.message_id.toString());
-        promotionMessage.edit({ embeds: [createPromotionEmbed(data)]} ).then((msg) => {
+        promotionMessage.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
           console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
         })
         break;
@@ -180,7 +183,25 @@ const promotionModified = onSnapshot(q2, (snapshot) => {
   })
 })
 
-function createPromotionEmbed(data) {
+function getChannelFromId(id) {
+  client.channels.fetch(id).then((channel) => {
+    return channel;
+  }).catch((err) => {
+    consola.error(new Error(`Error retrieving channel with id ${id}, Error: ${err}`));
+    return;
+  });
+}
+
+function getMessageFromId(channel, id) {
+  channel.messages.fetch(id).then((msg) => {
+    return msg;
+  }).catch((err) => {
+    consola.error(new Error(`Error retrieving message with id ${id}, Error: ${err}`));
+    return;
+  });
+}
+
+function createPromotionEmbed(data, role) {
   return new MessageEmbed()
   .setColor('AQUA')
   .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
