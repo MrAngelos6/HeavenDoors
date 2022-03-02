@@ -1,25 +1,13 @@
-import { Client, Intents } from 'discord.js';
-import { getFirestore, collection, query, onSnapshot } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
-import { commandConverter } from './command.mjs';
+import { Client, Intents, MessageEmbed } from 'discord.js';
+import { hyperlink, roleMention } from '@discordjs/builders';
+import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import firebase from './class/firebase.mjs';
+import { commandConverter } from './class/command.mjs';
+import { promotionConverter } from './class/promotions.mjs';
 
 //----------------------------------------------------------------
 // Server <-> Worker
 //----------------------------------------------------------------
-
-//----------------------------------------------------------------
-// Firebase Config
-//----------------------------------------------------------------
-
-const firebaseConfig = initializeApp({
-    apiKey: process.env.API_KEY,
-    authDomain: process.env.AUTH_DOMAIN,
-    databaseURL: process.env.DATABSE_URL,
-    projectId: process.env.PROJECT_ID,
-    storageBucket: process.env.STORAGE_BUCKET,
-    messagingSenderId: process.env.SENDER_ID,
-    appId: process.env.APP_ID
-});
 
 //----------------------------------------------------------------
 // Variables
@@ -29,7 +17,7 @@ let commandList = [];
 const db = getFirestore();
 
 //----------------------------------------------------------------
-// Firebase Part
+// Check New/Modified/Removed Command
 //----------------------------------------------------------------
 
 const q = query(collection(db, 'commands').withConverter(commandConverter));
@@ -61,7 +49,7 @@ const commandsModified = onSnapshot(q, (snapshot) => {
 })
 
 //----------------------------------------------------------------
-// Discord Part
+// Command Part
 //----------------------------------------------------------------
 
 // We initialize a Client Object
@@ -86,9 +74,9 @@ const client = new Client({
   ],
 });
 
-const live_channel = 946797486792667166;
-const title_channel = 946798597406613504;
-const category_channel = 946798746879025164;
+const live_channel = 946797486792667166n;
+const title_channel = 946798597406613504n;
+const category_channel = 946798746879025164n;
 
 // When the bot is ready
 client.on('ready', (client) => {
@@ -121,3 +109,84 @@ client.on('messageCreate', (message) => {
 // We login to Discord with the TOKEN
 client.login(process.env.DISCORD_KEY);
  
+//----------------------------------------------------------------
+// Check New/Modified Promotions
+//----------------------------------------------------------------
+
+const steamRole = 919305771492200458;
+const epicRole = 919305883815673936;
+const otherRole = 919305976820162560;
+
+const promotionChannel = client.channels.cache.get(753270574272217109);
+
+const q2 = query(collection(db, 'promotions').withConverter(promotionConverter));
+
+const promotionModified = onSnapshot(q2, (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    
+    const data = change.doc.data();
+
+    const role = 0;
+
+    switch(data.ping) {
+      case 'steam':
+        role = steamRole;
+        break;
+      case 'epic':
+        role = epicRole;
+        break;
+      case 'autre':
+        role = otherRole;
+        break;
+    }
+
+    switch(change.type) {
+      case 'added':
+
+        console.log('A new promotion has been detected: ', data);
+
+        // Send the message
+        promotionChannel.send({ embeds: [createPromotionEmbed(data)]} ).then(async (msg) => {
+
+          console.log('Embed message sent to promotion channel');
+
+          // We put the message id on Firebase
+          const promotionRef = doc(db, 'promotions', data.id);
+
+          await updateDoc(promotionRef, {
+            message_id: msg.id
+          }).then(() => {
+            console.log('message_id sent to Firebase !');
+          }).catch((err) => {
+            console.log('Error while sending message_id', err);
+          })
+        })
+
+        break;
+      case 'modified':
+        console.log('An edited promotion has been detected: ', data);
+        const promotionMessage = promotionChannel.messages.cache.get(data.message_id);
+        promotionMessage.edit({ embeds: [createPromotionEmbed(data)]} ).then((msg) => {
+          console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
+        })
+        break;
+      case 'removed':
+        break;
+      default:
+        console.log('A promotion not added/modified/removed ?');
+        break;
+    }
+      
+  })
+})
+
+function createPromotionEmbed(data) {
+  return new MessageEmbed()
+  .setColor('AQUA')
+  .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
+  .setAuthor({ name: 'Angeaple', iconURL: 'https://cdn.discordapp.com/avatars/299581701040898058/17ba9fc5a5fa8cd2aea7f5a9f98fc9af.webp' })
+  .setDescription(`L'offre se termine le ${data.end_date} donc foncer tête baissée car il est gratuit`)
+  .addField('Le lien :', hyperlink(`${data.platform}`, data.link))
+  .setFooter({ text: roleMention(role)})
+  .setTimestamp();
+}
