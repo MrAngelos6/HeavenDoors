@@ -4,7 +4,6 @@ import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'fir
 import firebase from './class/firebase.mjs';
 import { commandConverter } from './class/command.mjs';
 import { promotionConverter } from './class/promotions.mjs';
-import { Consola } from 'consola';
 
 //----------------------------------------------------------------
 // Server <-> Worker
@@ -187,7 +186,7 @@ function getChannelFromId(id) {
   client.channels.fetch(id).then((channel) => {
     return channel;
   }).catch((err) => {
-    consola.error(new Error(`Error retrieving channel with id ${id}, Error: ${err}`));
+    console.error(`Error retrieving channel with id ${id}, Error: ${err}`);
     return;
   });
 }
@@ -196,7 +195,7 @@ function getMessageFromId(channel, id) {
   channel.messages.fetch(id).then((msg) => {
     return msg;
   }).catch((err) => {
-    consola.error(new Error(`Error retrieving message with id ${id}, Error: ${err}`));
+    console.error(`Error retrieving message with id ${id}, Error: ${err}`);
     return;
   });
 }

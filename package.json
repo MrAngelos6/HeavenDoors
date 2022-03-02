@@ -26,8 +26,5 @@
         "discord",
         "bot"
     ],
-    "type": "module",
-    "devDependencies": {
-        "consola": "^2.15.3"
-    }
+    "type": "module"
 }
