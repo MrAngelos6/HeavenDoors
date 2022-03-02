@@ -1,5 +1,5 @@
 import { Client, Intents, MessageEmbed } from 'discord.js';
-import { hyperlink, roleMention } from '@discordjs/builders';
+import { hyperlink, roleMention, time } from '@discordjs/builders';
 import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import firebase from './class/firebase.mjs';
 import { commandConverter } from './class/command.mjs';
@@ -119,6 +119,9 @@ client.on('ready', (client) => {
 
           console.log('A new promotion has been detected: ', data);
 
+          // If the message is already on Discord
+          if(data.message_id) return;
+
           // Send the message
           client.channels.fetch(promotion_channel).then((channel) => {
             channel.send({ embeds: [createPromotionEmbed(data, role)]} ).then(async (msg) => {
@@ -136,15 +139,29 @@ client.on('ready', (client) => {
                 console.log('Error while sending message_id', err);
               })
             })
+          }).catch((err) => {
+            console.error('Error while fetching promotion channel', err);
           });
 
           break;
         case 'modified':
-          /*console.log('An edited promotion has been detected: ', data);
-          const promotionMessage = promotionChannel.messages.cache.get(data.message_id.toString());
-          promotionMessage.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
-            console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
-          })*/
+
+          console.log('An edited promotion has been detected: ', data);
+
+          client.channels.fetch(promotion_channel).then((channel) => {
+            channel.messages.fetch(data.message_id).then((msg) => {
+                msg.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
+                  console.log(`The message ${data.message_id} in promotion has been successfully edited`, msg);
+                }).catch((err) => {
+                  console.error('Error while editing message in promotion', err);
+                });
+            }).catch((err) => {
+              console.error('Error while fetching message', err);
+            });
+          }).catch((err) => {
+            console.error('Error while fetching promotion channel', err);
+          });
+
           break;
         case 'removed':
           break;
@@ -181,34 +198,16 @@ client.on('messageCreate', (message) => {
 // We login to Discord with the TOKEN
 client.login(process.env.DISCORD_KEY);
 
-/*
-function getChannelFromId(id) {
-  client.channels.fetch(id).then((channel) => {
-    return channel;
-  }).catch((err) => {
-    console.error(`Error retrieving channel with id ${id}, Error: ${err}`);
-    return;
-  });
-}
-
-function getMessageFromId(channel, id) {
-  channel.messages.fetch(id).then((msg) => {
-    return msg;
-  }).catch((err) => {
-    console.error(`Error retrieving message with id ${id}, Error: ${err}`);
-    return;
-  });
-}
-*/
-
 function createPromotionEmbed(data, role) {
   return new MessageEmbed()
-  .setColor('AQUA')
+  .setColor('RANDOM')
   .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
   .setAuthor({ name: 'Angeaple', iconURL: 'https://cdn.discordapp.com/avatars/299581701040898058/17ba9fc5a5fa8cd2aea7f5a9f98fc9af.webp' })
-  .setDescription(`L'offre se termine le ${data.end_date} donc foncer tête baissée car il est gratuit`)
-  .addField('Le lien :', hyperlink(`${data.platform}`, data.link))
-  .setFooter({ text: roleMention(role)})
+  .setDescription(`L'offre se termine le ${time(data.end_date.seconds)} donc foncer tête baissée car il est gratuit`)
+  .addFields(
+    { name: 'Le lien : ', value: hyperlink(`${data.platform}`, data.link), inline: true },
+    { name: 'Le ping : ', value: roleMention(role), inline: true }
+  )
   .setTimestamp();
 }
 
