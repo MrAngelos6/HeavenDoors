@@ -83,6 +83,78 @@ client.on('ready', (client) => {
   console.log(`Logged in as ${client.user.tag}!`);
   console.log(`Connected on Guilds: ${JSON.stringify(client.guilds)}`);
   client.user.setActivity('surveiller le Paradis !');
+
+  //----------------------------------------------------------------
+  // Check New/Modified Promotions
+  //----------------------------------------------------------------
+
+  const promotion_channel = '753270574272217109';
+  const steamRole = '919305771492200458';
+  const epicRole = '919305883815673936';
+  const otherRole = '919305976820162560';
+
+  const q2 = query(collection(db, 'promotions').withConverter(promotionConverter));
+
+  const promotionModified = onSnapshot(q2, (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+      
+      const data = change.doc.data();
+
+      let role = 0;
+
+      switch(data.ping) {
+        case 'steam':
+          role = steamRole;
+          break;
+        case 'epic':
+          role = epicRole;
+          break;
+        case 'autre':
+          role = otherRole;
+          break;
+      }
+
+      switch(change.type) {
+        case 'added':
+
+          console.log('A new promotion has been detected: ', data);
+
+          // Send the message
+          client.channels.fetch(promotion_channel).then((channel) => {
+            channel.send({ embeds: [createPromotionEmbed(data, role)]} ).then(async (msg) => {
+
+              console.log('Embed message sent to promotion channel');
+  
+              // We put the message id on Firebase
+              const promotionRef = doc(db, 'promotions', data.id);
+  
+              await updateDoc(promotionRef, {
+                message_id: msg.id
+              }).then(() => {
+                console.log('message_id sent to Firebase !');
+              }).catch((err) => {
+                console.log('Error while sending message_id', err);
+              })
+            })
+          });
+
+          break;
+        case 'modified':
+          /*console.log('An edited promotion has been detected: ', data);
+          const promotionMessage = promotionChannel.messages.cache.get(data.message_id.toString());
+          promotionMessage.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
+            console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
+          })*/
+          break;
+        case 'removed':
+          break;
+        default:
+          console.log('A promotion not added/modified/removed ?');
+          break;
+      }
+        
+    })
+  })
 });
 
 // When a message is received
@@ -108,80 +180,8 @@ client.on('messageCreate', (message) => {
 
 // We login to Discord with the TOKEN
 client.login(process.env.DISCORD_KEY);
- 
-//----------------------------------------------------------------
-// Check New/Modified Promotions
-//----------------------------------------------------------------
 
-const steamRole = '919305771492200458';
-const epicRole = '919305883815673936';
-const otherRole = '919305976820162560';
-
-const promotionChannel = getChannelFromId('753270574272217109');
-
-const q2 = query(collection(db, 'promotions').withConverter(promotionConverter));
-
-const promotionModified = onSnapshot(q2, (snapshot) => {
-  snapshot.docChanges().forEach((change) => {
-    
-    const data = change.doc.data();
-
-    let role = 0;
-
-    switch(data.ping) {
-      case 'steam':
-        role = steamRole;
-        break;
-      case 'epic':
-        role = epicRole;
-        break;
-      case 'autre':
-        role = otherRole;
-        break;
-    }
-
-
-
-    switch(change.type) {
-      case 'added':
-
-        console.log('A new promotion has been detected: ', data);
-
-        // Send the message
-        promotionChannel.send({ embeds: [createPromotionEmbed(data)]} ).then(async (msg) => {
-
-          console.log('Embed message sent to promotion channel');
-
-          // We put the message id on Firebase
-          const promotionRef = doc(db, 'promotions', data.id);
-
-          await updateDoc(promotionRef, {
-            message_id: msg.id
-          }).then(() => {
-            console.log('message_id sent to Firebase !');
-          }).catch((err) => {
-            console.log('Error while sending message_id', err);
-          })
-        })
-
-        break;
-      case 'modified':
-        console.log('An edited promotion has been detected: ', data);
-        const promotionMessage = promotionChannel.messages.cache.get(data.message_id.toString());
-        promotionMessage.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
-          console.log(`The message with firebase_id: ${data.id} has been edited`, msg);
-        })
-        break;
-      case 'removed':
-        break;
-      default:
-        console.log('A promotion not added/modified/removed ?');
-        break;
-    }
-      
-  })
-})
-
+/*
 function getChannelFromId(id) {
   client.channels.fetch(id).then((channel) => {
     return channel;
@@ -199,6 +199,7 @@ function getMessageFromId(channel, id) {
     return;
   });
 }
+*/
 
 function createPromotionEmbed(data, role) {
   return new MessageEmbed()
@@ -210,3 +211,4 @@ function createPromotionEmbed(data, role) {
   .setFooter({ text: roleMention(role)})
   .setTimestamp();
 }
+
