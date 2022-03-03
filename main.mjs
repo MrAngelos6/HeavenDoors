@@ -6,10 +6,6 @@ import { commandConverter } from './class/command.mjs';
 import { promotionConverter } from './class/promotions.mjs';
 
 //----------------------------------------------------------------
-// Server <-> Worker
-//----------------------------------------------------------------
-
-//----------------------------------------------------------------
 // Variables
 //----------------------------------------------------------------
 
@@ -124,7 +120,7 @@ client.on('ready', (client) => {
 
           // Send the message
           client.channels.fetch(promotion_channel).then((channel) => {
-            channel.send({ embeds: [createPromotionEmbed(data, role)]} ).then(async (msg) => {
+            channel.send({ content: roleMention(role), embeds: [createPromotionEmbed(data)]} ).then(async (msg) => {
 
               console.log('Embed message sent to promotion channel');
   
@@ -150,7 +146,7 @@ client.on('ready', (client) => {
 
           client.channels.fetch(promotion_channel).then((channel) => {
             channel.messages.fetch(data.message_id).then((msg) => {
-                msg.edit({ embeds: [createPromotionEmbed(data, role)]} ).then((msg) => {
+                msg.edit({ content: roleMention(role), embeds: [createPromotionEmbed(data)]} ).then((msg) => {
                   console.log(`The message ${data.message_id} in promotion has been successfully edited`, msg);
                 }).catch((err) => {
                   console.error('Error while editing message in promotion', err);
@@ -198,16 +194,13 @@ client.on('messageCreate', (message) => {
 // We login to Discord with the TOKEN
 client.login(process.env.DISCORD_KEY);
 
-function createPromotionEmbed(data, role) {
+function createPromotionEmbed(data) {
   return new MessageEmbed()
   .setColor('RANDOM')
   .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
   .setAuthor({ name: 'Angeaple', iconURL: 'https://cdn.discordapp.com/avatars/299581701040898058/17ba9fc5a5fa8cd2aea7f5a9f98fc9af.webp' })
   .setDescription(`L'offre se termine le ${time(data.end_date.seconds)} donc foncer tête baissée car il est gratuit`)
-  .addFields(
-    { name: 'Le lien : ', value: hyperlink(`${data.platform}`, data.link), inline: true },
-    { name: 'Le ping : ', value: roleMention(role), inline: true }
-  )
+  .addField('Le lien :', hyperlink(`${data.platform}`, data.link))
   .setTimestamp();
 }
 
