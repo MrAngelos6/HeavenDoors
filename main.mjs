@@ -1,6 +1,7 @@
 import { Client, Intents, MessageEmbed } from 'discord.js';
-import { hyperlink, roleMention, time } from '@discordjs/builders';
+import { hyperlink, roleMention } from '@discordjs/builders';
 import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import dayjs from 'dayjs'
 import firebase from './class/firebase.mjs';
 import { commandConverter } from './class/command.mjs';
 import { promotionConverter } from './class/promotions.mjs';
@@ -195,11 +196,14 @@ client.on('messageCreate', (message) => {
 client.login(process.env.DISCORD_KEY);
 
 function createPromotionEmbed(data) {
+
+  const date = dayjs.unix(data.end_date.seconds).format('DD/MM/YYYY');
+
   return new MessageEmbed()
   .setColor('RANDOM')
   .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
   .setAuthor({ name: 'Angeaple', iconURL: 'https://cdn.discordapp.com/avatars/299581701040898058/17ba9fc5a5fa8cd2aea7f5a9f98fc9af.webp' })
-  .setDescription(`L'offre se termine le ${time(data.end_date.seconds)} donc foncer tête baissée car il est gratuit`)
+  .setDescription(`L'offre se termine le ${date} donc foncer tête baissée car il est gratuit`)
   .addField('Le lien :', hyperlink(`${data.platform}`, data.link))
   .setTimestamp();
 }
