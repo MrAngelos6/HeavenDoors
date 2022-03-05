@@ -1,6 +1,7 @@
 import express from 'express'
 import crypto from 'crypto'
 import https from 'https'
+import { getFirestore, collection, addDoc } from 'firebase/firestore'
 import firebase from './class/firebase.mjs'
 
 const port = process.env.PORT || 8080;
@@ -64,8 +65,7 @@ app.post('/eventsub', async (req, res) => {
                 type: notification.subscription.type,
                 title: title,
                 category: category
-            }
-            );
+            });
 
             console.log(`Event type: ${notification.subscription.type}`);
             console.log(JSON.stringify(notification.event, null, 4));
