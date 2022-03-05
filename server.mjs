@@ -1,9 +1,23 @@
-import express from 'express';
-import crypto from 'crypto';
+import express from 'express'
+import crypto from 'crypto'
+import http from 'http'
+import client from './main.mjs'
 
 const port = process.env.PORT || 8080;
 
 const app = express();
+
+const live_channel = '946797486792667166';
+const title_channel = '946798597406613504';
+const category_channel = '946798746879025164';
+
+//----------------------------------------------------------------
+// Keep Alive
+//----------------------------------------------------------------
+
+setInterval(() => {
+    http.get('https://mrangelos6-discord-bot.herokuapp.com/');
+}, 300000);
 
 //----------------------------------------------------------------
 // Twitch Part
@@ -39,8 +53,49 @@ app.post('/eventsub', (req, res) => {
         let notification = JSON.parse(req.body);
         
         if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
-            // TODO: Do something with the event's data.
 
+            client.on('ready', (client) => {
+                switch(notification.subscription.type) {
+                    case 'channel.update':
+                    // If title or category changes.
+                        client.channels.fetch(title_channel).then((channel) => {
+                            channel.setName(`✏️ ${notification.event.title}`).then((editedChannel) => {
+                                console.log('The channel has been renamed to title mode');
+                            }).catch((err) => {
+                                console.error('Error while setName for Title', err);
+                            });
+                        });
+                        client.channels.fetch(category_channel).then((channel) => {
+                            channel.setName(`🎮 ${notification.event.category_name}`).then((editedChannel) => {
+                                console.log('The channel has been renamed to category mode');
+                            }).catch((err) => {
+                                console.error('Error while setName for Category', err);
+                            });
+                        });
+                        break;
+                    // If the stream goes online
+                    case 'stream.online':
+                        client.channels.fetch(live_channel).then((channel) => {
+                            channel.setName('🔴 EN LIGNE').then((editedChannel) => {
+                              console.log('The channel has been renamed to online mode');
+                            }).catch((err) => {
+                              console.error('Error while setName for Online', err);
+                            });
+                          });
+                        break;
+                    // If the stream goes offline
+                    case 'stream.offline':
+                        client.channels.fetch(live_channel).then((channel) => {
+                            channel.setName('❌ HORS LIGNE').then((editedChannel) => {
+                              console.log('The channel has been renamed to offline mode');
+                            }).catch((err) => {
+                              console.error('Error while setName for Offline', err);
+                            });
+                          });
+                        break;
+                }
+            });
+            
             console.log(`Event type: ${notification.subscription.type}`);
             console.log(JSON.stringify(notification.event, null, 4));
             
@@ -95,3 +150,5 @@ function getHmac(secret, message) {
 function verifyMessage(hmac, verifySignature) {
     return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(verifySignature));
 }
+
+client.login(process.env.DISCORD_KEY);

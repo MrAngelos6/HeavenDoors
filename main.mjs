@@ -71,10 +71,6 @@ const client = new Client({
   ],
 });
 
-const live_channel = '946797486792667166';
-const title_channel = '946798597406613504';
-const category_channel = '946798746879025164';
-
 // When the bot is ready
 client.on('ready', (client) => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -166,72 +162,8 @@ client.on('ready', (client) => {
           console.log('A promotion not added/modified/removed ?');
           break;
       }
-
     })
   });
-
-  //----------------------------------------------------------------
-  // Check New Events
-  //----------------------------------------------------------------
-
-  const q3 = query(collection(db, 'events').withConverter(eventConverter));
-
-  const eventModified = onSnapshot(q3, (snapshot) => {
-    snapshot.docChanges().forEach(async (change) => {
-
-      const data = change.doc.data();
-
-      switch(change.type) {
-        case 'added':
-          // We check what type of event
-          switch(data.type) {
-            case 'online':
-              client.channels.fetch(live_channel).then((channel) => {
-                channel.setName('🔴 EN LIGNE').then((editedChannel) => {
-                  console.log('The channel has been renamed to online mode');
-                }).catch((err) => {
-                  console.error('Error while setName for Online', err);
-                });
-              });
-              break;
-            case 'offline':
-              client.channels.fetch(live_channel).then((channel) => {
-                channel.setName('❌ HORS LIGNE').then((editedChannel) => {
-                  console.log('The channel has been renamed to offline mode');
-                }).catch((err) => {
-                  console.error('Error while setName for Offline', err);
-                });
-              });
-              break;
-            case 'status':
-              client.channels.fetch(title_channel).then((channel) => {
-                channel.setName(`✏️ ${data.title}`).then((editedChannel) => {
-                  console.log('The channel has been renamed to title mode');
-                }).catch((err) => {
-                  console.error('Error while setName for Title', err);
-                });
-              });
-              client.channels.fetch(category_channel).then((channel) => {
-                channel.setName(`🎮 ${data.category}`).then((editedChannel) => {
-                  console.log('The channel has been renamed to category mode');
-                }).catch((err) => {
-                  console.error('Error while setName for Category', err);
-                });
-              });
-              break;
-          }
-
-          // We delete the doc
-          await deleteDocument(doc(db, 'events', data.id));
-
-          break;
-        default:
-          break;
-      }
-
-    })
-  });
-
 });
 
 // When a message is received
@@ -270,3 +202,4 @@ function createPromotionEmbed(data) {
   .setTimestamp();
 }
 
+export default client;
