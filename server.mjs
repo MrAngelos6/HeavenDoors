@@ -53,13 +53,15 @@ app.post('/eventsub', async (req, res) => {
         
         if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
 
-            let title = null;
-            let category = null;
+            let title = '';
+            let category = '';
 
             if(notification.subscription.type == 'channel.update') {
                 title = notification.event.title;
                 category = notification.event.category;
             }
+
+            console.log(title, category);
 
             const ref = await addDoc(collection(db, 'events'), {
                 type: notification.subscription.type,

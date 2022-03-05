@@ -26,6 +26,6 @@ export const eventConverter = {
     },
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return new Command(snapshot.id, data.type, data.title, data.category);
+        return new Event(snapshot.id, data.type, data.title, data.category);
     }
 }

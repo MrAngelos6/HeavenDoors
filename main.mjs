@@ -183,6 +183,7 @@ client.on('ready', (client) => {
 
       switch(change.type) {
         case 'added':
+          if(data.type == null) return;
           // We check what type of event
           switch(data.type) {
             case 'stream.online':
