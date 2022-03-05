@@ -39,7 +39,7 @@ app.use(express.raw({          // Need raw message body for signature verificati
     type: 'application/json'
 }))  
 
-app.post('/eventsub', (req, res) => {
+app.post('/eventsub', async (req, res) => {
     let secret = getSecret();
     let message = getHmacMessage(req);
     let hmac = HMAC_PREFIX + getHmac(secret, message);  // Signature to compare
