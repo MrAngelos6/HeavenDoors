@@ -56,8 +56,9 @@ app.post('/eventsub', (req, res) => {
 
             client.on('ready', (client) => {
                 switch(notification.subscription.type) {
-                    case 'channel.update':
                     // If title or category changes.
+                    case 'channel.update':
+                        console.log("channel update");
                         client.channels.fetch(title_channel).then((channel) => {
                             channel.setName(`✏️ ${notification.event.title}`).then((editedChannel) => {
                                 console.log('The channel has been renamed to title mode');
@@ -75,6 +76,7 @@ app.post('/eventsub', (req, res) => {
                         break;
                     // If the stream goes online
                     case 'stream.online':
+                        console.log('stream online');
                         client.channels.fetch(live_channel).then((channel) => {
                             channel.setName('🔴 EN LIGNE').then((editedChannel) => {
                               console.log('The channel has been renamed to online mode');
@@ -85,6 +87,7 @@ app.post('/eventsub', (req, res) => {
                         break;
                     // If the stream goes offline
                     case 'stream.offline':
+                        console.log('stream online');
                         client.channels.fetch(live_channel).then((channel) => {
                             channel.setName('❌ HORS LIGNE').then((editedChannel) => {
                               console.log('The channel has been renamed to offline mode');
@@ -92,6 +95,9 @@ app.post('/eventsub', (req, res) => {
                               console.error('Error while setName for Offline', err);
                             });
                           });
+                        break;
+                    default:
+                        console.log('default');
                         break;
                 }
             });
