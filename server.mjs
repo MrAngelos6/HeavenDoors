@@ -61,16 +61,11 @@ app.post('/eventsub', async (req, res) => {
                 category = notification.event.category_name;
             }
 
-            console.log(title, category);
-
             const ref = await addDoc(collection(db, 'events'), {
                 type: notification.subscription.type,
                 title: title,
                 category: category
             });
-
-            console.log(`Event type: ${notification.subscription.type}`);
-            console.log(JSON.stringify(notification.event, null, 4));
             
             res.sendStatus(204);
         }

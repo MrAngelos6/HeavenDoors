@@ -206,7 +206,7 @@ client.on('ready', (client) => {
               break;
             case 'channel.update':
               client.channels.fetch(title_channel).then((channel) => {
-                channel.setName(`✏️ ${data.title}`).then((editedChannel) => {
+                channel.setName(`🖊️ ${data.title}`).then((editedChannel) => {
                   console.log('The channel has been renamed to title mode');
                 }).catch((err) => {
                   console.error('Error while setName for Title', err);
