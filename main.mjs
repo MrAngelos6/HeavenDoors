@@ -1,10 +1,10 @@
-import { Client, Intents, MessageEmbed } from 'discord.js';
-import { hyperlink, roleMention } from '@discordjs/builders';
-import { getFirestore, collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import dayjs from 'dayjs'
-import firebase from './class/firebase.mjs';
-import { commandConverter } from './class/command.mjs';
-import { promotionConverter } from './class/promotions.mjs';
+import { Client, Intents, MessageEmbed } from 'discord.js'
+import { hyperlink, roleMention } from '@discordjs/builders'
+import { getFirestore, collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import firebase from './class/firebase'
+import { commandConverter } from './class/command';
+import { promotionConverter } from './class/promotions'
+import { eventConverter } from './class/event'
 
 //----------------------------------------------------------------
 // Variables
@@ -94,7 +94,7 @@ client.on('ready', (client) => {
 
   const promotionModified = onSnapshot(q2, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
-      
+
       const data = change.doc.data();
 
       let role = 0;
@@ -127,7 +127,7 @@ client.on('ready', (client) => {
   
               // We put the message id on Firebase
               const promotionRef = doc(db, 'promotions', data.id);
-  
+
               await updateDoc(promotionRef, {
                 message_id: msg.id
               }).then(() => {
@@ -147,8 +147,8 @@ client.on('ready', (client) => {
 
           client.channels.fetch(promotion_channel).then((channel) => {
             channel.messages.fetch(data.message_id).then((msg) => {
-                msg.edit({ content: roleMention(role), embeds: [createPromotionEmbed(data)]} ).then((msg) => {
-                  console.log(`The message ${data.message_id} in promotion has been successfully edited`, msg);
+                msg.edit({ content: roleMention(role), embeds: [createPromotionEmbed(data)]} ).then(() => {
+                  console.log(`The message ${data.message_id} in promotion has been successfully edited`);
                 }).catch((err) => {
                   console.error('Error while editing message in promotion', err);
                 });
@@ -166,9 +166,72 @@ client.on('ready', (client) => {
           console.log('A promotion not added/modified/removed ?');
           break;
       }
-        
+
     })
-  })
+  });
+
+  //----------------------------------------------------------------
+  // Check New Events
+  //----------------------------------------------------------------
+
+  const q3 = query(collection(db, 'events').withConverter(eventConverter));
+
+  const eventModified = onSnapshot(q3, (snapshot) => {
+    snapshot.docChanges().forEach(async (change) => {
+
+      const data = change.doc.data();
+
+      switch(change.type) {
+        case 'added':
+          // We check what type of event
+          switch(data.type) {
+            case 'online':
+              client.channels.fetch(live_channel).then((channel) => {
+                channel.setName('🔴 EN LIGNE').then((editedChannel) => {
+                  console.log('The channel has been renamed to online mode');
+                }).catch((err) => {
+                  console.error('Error while setName for Online', err);
+                });
+              });
+              break;
+            case 'offline':
+              client.channels.fetch(live_channel).then((channel) => {
+                channel.setName('❌ HORS LIGNE').then((editedChannel) => {
+                  console.log('The channel has been renamed to offline mode');
+                }).catch((err) => {
+                  console.error('Error while setName for Offline', err);
+                });
+              });
+              break;
+            case 'status':
+              client.channels.fetch(title_channel).then((channel) => {
+                channel.setName(`✏️ ${data.title}`).then((editedChannel) => {
+                  console.log('The channel has been renamed to title mode');
+                }).catch((err) => {
+                  console.error('Error while setName for Title', err);
+                });
+              });
+              client.channels.fetch(category_channel).then((channel) => {
+                channel.setName(`🎮 ${data.category}`).then((editedChannel) => {
+                  console.log('The channel has been renamed to category mode');
+                }).catch((err) => {
+                  console.error('Error while setName for Category', err);
+                });
+              });
+              break;
+          }
+
+          // We delete the doc
+          await deleteDocument(doc(db, 'events', data.id));
+
+          break;
+        default:
+          break;
+      }
+
+    })
+  });
+
 });
 
 // When a message is received
@@ -197,14 +260,13 @@ client.login(process.env.DISCORD_KEY);
 
 function createPromotionEmbed(data) {
 
-  const date = dayjs.unix(data.end_date.seconds).format('DD/MM/YYYY');
-
   return new MessageEmbed()
   .setColor('RANDOM')
   .setTitle(`${data.name} est actuellement disponible gratuitement sur ${data.platform} !`)
   .setAuthor({ name: 'Angeaple', iconURL: 'https://cdn.discordapp.com/avatars/299581701040898058/17ba9fc5a5fa8cd2aea7f5a9f98fc9af.webp' })
-  .setDescription(`L'offre se termine le ${date} donc foncer tête baissée car il est gratuit`)
+  .setDescription(`L'offre se termine le ${Intl.DateTimeFormat('fr-FR').format(data.end_date.seconds * 1000)} donc foncer tête baissée car il est gratuit`)
   .addField('Le lien :', hyperlink(`${data.platform}`, data.link))
+  .setImage(data.url)
   .setTimestamp();
 }
 

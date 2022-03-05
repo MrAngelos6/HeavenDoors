@@ -1,5 +1,4 @@
 import express from 'express';
-import Queue from 'bull';
 
 const port = process.env.PORT || 8080;
 
