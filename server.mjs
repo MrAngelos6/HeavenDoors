@@ -58,7 +58,7 @@ app.post('/eventsub', async (req, res) => {
 
             if(notification.subscription.type == 'channel.update') {
                 title = notification.event.title;
-                category = notification.event.category;
+                category = notification.event.category_name;
             }
 
             console.log(title, category);
