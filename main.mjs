@@ -1,10 +1,10 @@
 import { Client, Intents, MessageEmbed } from 'discord.js'
 import { hyperlink, roleMention } from '@discordjs/builders'
 import { getFirestore, collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
-import firebase from './class/firebase'
-import { commandConverter } from './class/command';
-import { promotionConverter } from './class/promotions'
-import { eventConverter } from './class/event'
+import firebase from './class/firebase.mjs'
+import { commandConverter } from './class/command.mjs';
+import { promotionConverter } from './class/promotions.mjs'
+import { eventConverter } from './class/event.mjs'
 
 //----------------------------------------------------------------
 // Variables
