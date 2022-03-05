@@ -1,22 +1,20 @@
 import express from 'express'
 import crypto from 'crypto'
-import http from 'http'
-import client from './main.mjs'
+import https from 'https'
+import firebase from './class/firebase.mjs'
 
 const port = process.env.PORT || 8080;
 
 const app = express();
 
-const live_channel = '946797486792667166';
-const title_channel = '946798597406613504';
-const category_channel = '946798746879025164';
+const db = getFirestore();
 
 //----------------------------------------------------------------
 // Keep Alive
 //----------------------------------------------------------------
 
 setInterval(() => {
-    http.get('https://mrangelos6-discord-bot.herokuapp.com/');
+    https.get('https://mrangelos6-discord-bot.herokuapp.com/');
 }, 300000);
 
 //----------------------------------------------------------------
@@ -54,54 +52,21 @@ app.post('/eventsub', (req, res) => {
         
         if (MESSAGE_TYPE_NOTIFICATION === req.headers[MESSAGE_TYPE]) {
 
-            client.on('ready', (client) => {
-                switch(notification.subscription.type) {
-                    // If title or category changes.
-                    case 'channel.update':
-                        console.log("channel update");
-                        client.channels.fetch(title_channel).then((channel) => {
-                            channel.setName(`✏️ ${notification.event.title}`).then((editedChannel) => {
-                                console.log('The channel has been renamed to title mode');
-                            }).catch((err) => {
-                                console.error('Error while setName for Title', err);
-                            });
-                        });
-                        client.channels.fetch(category_channel).then((channel) => {
-                            channel.setName(`🎮 ${notification.event.category_name}`).then((editedChannel) => {
-                                console.log('The channel has been renamed to category mode');
-                            }).catch((err) => {
-                                console.error('Error while setName for Category', err);
-                            });
-                        });
-                        break;
-                    // If the stream goes online
-                    case 'stream.online':
-                        console.log('stream online');
-                        client.channels.fetch(live_channel).then((channel) => {
-                            channel.setName('🔴 EN LIGNE').then((editedChannel) => {
-                              console.log('The channel has been renamed to online mode');
-                            }).catch((err) => {
-                              console.error('Error while setName for Online', err);
-                            });
-                          });
-                        break;
-                    // If the stream goes offline
-                    case 'stream.offline':
-                        console.log('stream online');
-                        client.channels.fetch(live_channel).then((channel) => {
-                            channel.setName('❌ HORS LIGNE').then((editedChannel) => {
-                              console.log('The channel has been renamed to offline mode');
-                            }).catch((err) => {
-                              console.error('Error while setName for Offline', err);
-                            });
-                          });
-                        break;
-                    default:
-                        console.log('default');
-                        break;
-                }
-            });
-            
+            let title = null;
+            let category = null;
+
+            if(notification.subscription.type == 'channel.update') {
+                title = notification.event.title;
+                category = notification.event.category;
+            }
+
+            const ref = await addDoc(collection(db, 'events'), {
+                type: notification.subscription.type,
+                title: title,
+                category: category
+            }
+            );
+
             console.log(`Event type: ${notification.subscription.type}`);
             console.log(JSON.stringify(notification.event, null, 4));
             
@@ -156,5 +121,3 @@ function getHmac(secret, message) {
 function verifyMessage(hmac, verifySignature) {
     return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(verifySignature));
 }
-
-client.login(process.env.DISCORD_KEY);
