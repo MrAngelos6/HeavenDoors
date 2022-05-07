@@ -175,6 +175,8 @@ client.on('ready', (client) => {
   //----------------------------------------------------------------
 
   const q3 = query(collection(db, 'events').withConverter(eventConverter));
+  const announceChannel = '753266458468941954';
+  const rolePingStream = '916683287437647952';
 
   const eventModified = onSnapshot(q3, (snapshot) => {
     snapshot.docChanges().forEach(async (change) => {
@@ -190,6 +192,17 @@ client.on('ready', (client) => {
               client.channels.fetch(live_channel).then((channel) => {
                 channel.setName('🔴 EN LIGNE').then((editedChannel) => {
                   console.log('The channel has been renamed to online mode');
+
+                  client.channels.fetch(announceChannel).then((channel) => {
+                    channel.send(`${roleMention(rolePingStream)} Je suis en live mes petits anges ! https://twitch.tv/MrAngelos6.`).then(() => {
+                      console.log('Announce message has been sent.');
+                    }).catch((err) => {
+                      console.log('Error while sending announce message');
+                    });
+                  }).catch((err) => {
+                    console.error('Error while announce stream Online', err);
+                  });
+
                 }).catch((err) => {
                   console.error('Error while setName for Online', err);
                 });
